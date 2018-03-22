@@ -1,0 +1,212 @@
+<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>body {
+      font-family: "Lato", sans-serif;
+    }
+
+    .sidenav {
+      height: 100%;
+      width: 0;
+      position: fixed;
+      z-index: 1;
+      top: 0;
+      left: 0;
+      background-color: #111;
+      overflow-x: hidden;
+      transition: 0.5s;
+      padding-top: 60px;
+    }
+
+    .sidenav a {
+      padding: 8px 8px 8px 32px;
+      text-decoration: none;
+      font-size: 25px;
+      color: #818181;
+      display: block;
+      transition: 0.3s;
+    }
+
+    .sidenav a:hover {
+      color: #f1f1f1;
+    }
+
+    .sidenav .closebtn {
+      position: absolute;
+      top: 0;
+      right: 25px;
+      font-size: 36px;
+      margin-left: 50px;
+    }
+
+    #right-panel {
+      font-family: 'Roboto', 'sans-serif';
+      line-height: 30px;
+      padding-left: 10px;
+    }
+
+    #right-panel select,
+    #right-panel input {
+      font-size: 15px;
+    }
+
+    #right-panel select {
+      width: 100%;
+    }
+
+    #right-panel i {
+      font-size: 12px;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      height: 100%;
+      float: left;
+      width: 100%;
+      height: 100%;
+    }
+
+    #right-panel {
+      margin: 20px;
+      border-width: 2px;
+      width: 20%;
+      height: 400px;
+      float: left;
+      text-align: left;
+      padding-top: 0;
+    }
+
+    #directions-panel {
+      margin-top: 10px;
+      background-color: #FFEE77;
+      padding: 10px;
+      overflow: scroll;
+      height: 174px;
+    }
+    .content{
+      color: white;
+      padding: 0 10px;
+      
+      overflow: hidden;
+    }
+    @media screen and (max-height: 450px) {
+      .sidenav {
+        padding-top: 50px;
+      }
+      .sidenav a {
+        font-size: 18px;
+      }
+    }</style></head><body><div id="mySidenav" class="sidenav"><a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a><div class="content" id="placeContent"></div></div><div id="map"></div><script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script><script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDBGVDv5fOFgfW4ixNZL_2krgkriGu6vvc&libraries=places&callback=initMap" async defer></script><script>function openNav() {
+      var navWidth = ($(document).width() * 30) / 100;
+      if(navWidth > 350) navWidth = 350;
+      $("#mySidenav").width(navWidth);
+      $("#mySidenav .content").width(navWidth - 20);
+    }
+
+    function closeNav() {
+      document.getElementById("mySidenav").style.width = "0";
+    }
+
+    function loadPlaceSuccess(data) {
+      var bounds = new google.maps.LatLngBounds();
+      var directionsDisplay;
+      directionsDisplay = new google.maps.DirectionsRenderer({
+        panel: document.getElementById('showroute'),
+        suppressMarkers: true
+      });
+
+      var directionsService = new google.maps.DirectionsService();
+      //var locations = JSON.parse($('#listPoints').text());
+      directionsDisplay.setMap(map);
+      var request = {
+        travelMode: google.maps.TravelMode.DRIVING
+      };
+
+      for (i = 0; i < data.length; i++) {
+        marker = new google.maps.Marker({
+          position: new google.maps.LatLng(data[i].location[0], data[i].location[1]),
+          icon: '/img/marker-icons/library_maps.png',
+          map: map,
+          title: data[i].title
+        });
+        google.maps.event.addListener(marker, "click", function () {
+          $('#placeContent').html(this.title);
+          openNav();
+        });
+        bounds.extend(new google.maps.LatLng(data[i].location[0], data[i].location[1]));
+
+        if (i == 0) request.origin = marker.getPosition();
+        else if (i == data.length - 1) request.destination = marker.getPosition();
+        else {
+          if (!request.waypoints) request.waypoints = [];
+          request.waypoints.push({
+            location: marker.getPosition(),
+            stopover: true
+          });
+        }
+
+      }
+      directionsService.route(request, function (result, status) {
+        if (status == google.maps.DirectionsStatus.OK) {
+          directionsDisplay.setDirections(result);
+        }
+      });
+      map.fitBounds(bounds);
+    }
+
+    function loadTourSuccess(data) {
+      console.log(data);
+      $.ajax({
+        url: 'http://103.199.18.44:2990/api/Maps',
+        dataType: 'json',
+        method: 'GET',
+        data: {
+          filter: '{"where" : {"id" : { "inq": ' + JSON.stringify(data[0].placeIds) + ' }}}'
+        }
+      }).done(loadPlaceSuccess);
+    }
+
+    function loadMarkers() {
+      $.ajax({
+        url: 'http://103.199.18.44:2990/api/Maps',
+        dataType: 'json',
+        method: 'GET',
+        data: {
+          filter: '{"where" : {"id" : ' + getUrlParameter('tourId') + '}}'
+        }
+      }).done(loadTourSuccess);
+    }
+
+    var map;
+
+    function initMap() {
+      var directionsService = new google.maps.DirectionsService;
+      var directionsDisplay = new google.maps.DirectionsRenderer;
+      map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 6,
+        center: {
+          lat: 41.85,
+          lng: -87.65
+        }
+      });
+      directionsDisplay.setMap(map);
+
+      loadMarkers(); // load sanh sách điểm của tour
+    }
+    var getUrlParameter = function getUrlParameter(sParam) {
+      var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+          sURLVariables = sPageURL.split('&'),
+          sParameterName,
+          i;
+
+      for (i = 0; i < sURLVariables.length; i++) {
+          sParameterName = sURLVariables[i].split('=');
+
+          if (sParameterName[0] === sParam) {
+              return sParameterName[1] === undefined ? true : sParameterName[1];
+          }
+      }
+  };</script></body></html>
