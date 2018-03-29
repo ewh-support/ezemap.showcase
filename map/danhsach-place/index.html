@@ -128,7 +128,8 @@
       for (i = 0; i < data.length; i++) {
         marker = new google.maps.Marker({
           position: new google.maps.LatLng(data[i].location[0], data[i].location[1]),
-          icon: '/img/marker-icons/library_maps.png',
+          //icon: '/img/marker-icons/library_maps.png'
+          icon: '/img/marker-icons/' + 'abcdefghijklmnopqrstuvwxyz'.charAt(i) +'.png',
           map: map,
           title: data[i].title
         });
