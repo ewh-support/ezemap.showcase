@@ -215,24 +215,41 @@
         DatatablePlaceList.init();
     });
     $('#add-place-button').click(function () {
-        axios.post('http://103.199.18.44:2990/api/Maps', {
-                "level": map.getZoom(),
-                "type": "PLACE",
-                "title": $('#add-place-title').val(),
-                "location": [
-                    $('#add-place-lat').val(),
-                    $('#add-place-lng').val()
-                ],
-                "status": "ACTIVE"
-            })
-            .then(function (response) {
-                alert('Thêm điểm thành công');
-                DatatablePlaceList.reload();
-            })
-            .catch(function (error) {
-                console.log('err axios.post' + error);
-                alert('Thất bại');
-            });
+        var diem = {
+            "level": map.getZoom(),
+            "type": "PLACE",
+            "title": $('#add-place-title').val(),
+            "location": [
+                $('#add-place-lat').val(),
+                $('#add-place-lng').val()
+            ],
+            "status": "ACTIVE"
+        };
+        console.log("diem", diem);
+
+        axios.post('http://103.199.18.44:2990/api/Maps', diem)
+        .then(function (response) {
+            alert('Thêm điểm thành công');
+            DatatablePlaceList.reload();
+        })
+        .catch(function (error) {
+            console.log('err axios.post' + error);
+            alert('Thất bại');
+        });
+
+        //forEach(value, index, arr)
+        //{
+        //    axios.post('http://103.199.18.44:2990/api/Maps', value)
+        //    .then(function (response) {
+        //        alert('Thêm điểm thành công');
+        //        DatatablePlaceList.reload();
+        //    })
+        //    .catch(function (error) {
+        //        console.log('err axios.post' + error);
+        //        alert('Thất bại');
+        //    });
+        //}
+     
     });</script><style>#map {
         height: 400px;
         width: 100%;
